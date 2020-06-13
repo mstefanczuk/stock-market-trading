@@ -1,0 +1,20 @@
+version: '3.1'
+services:
+  stock-market-trading:
+    container_name: stock-market-trading
+    image: docker/stock-market-trading
+    build:
+      context: .
+      dockerfile: docker/stock-market-trading/Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+  db:
+    image: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_PASSWORD=stock_market_trading
+      - POSTGRES_USER=stock_market_trading
+      - POSTGRES_DB=stock_market_trading
