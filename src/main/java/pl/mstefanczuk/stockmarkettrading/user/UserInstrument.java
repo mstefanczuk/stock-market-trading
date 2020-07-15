@@ -1,6 +1,8 @@
-package pl.mstefanczuk.stockmarkettrading.model;
+package pl.mstefanczuk.stockmarkettrading.user;
 
 import lombok.Data;
+import pl.mstefanczuk.stockmarkettrading.instrument.Instrument;
+import pl.mstefanczuk.stockmarkettrading.user.User;
 
 import javax.persistence.*;
 import java.math.BigDecimal;

@@ -1,4 +1,4 @@
-package pl.mstefanczuk.stockmarkettrading.service;
+package pl.mstefanczuk.stockmarkettrading.instrument;
 
 import org.springframework.stereotype.Service;
 

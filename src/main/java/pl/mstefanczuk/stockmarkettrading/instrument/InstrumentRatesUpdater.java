@@ -1,10 +1,10 @@
-package pl.mstefanczuk.stockmarkettrading.component;
+package pl.mstefanczuk.stockmarkettrading.instrument;
 
 import lombok.AllArgsConstructor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import pl.mstefanczuk.stockmarkettrading.service.InstrumentRateService;
+import pl.mstefanczuk.stockmarkettrading.instrument.InstrumentRateService;
 
 @Component
 @AllArgsConstructor

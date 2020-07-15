@@ -1,4 +1,4 @@
-package pl.mstefanczuk.stockmarkettrading.model;
+package pl.mstefanczuk.stockmarkettrading.user;
 
 import lombok.Data;
 
@@ -9,10 +9,10 @@ import javax.persistence.Id;
 
 @Entity
 @Data
-public class Instrument {
+public class User {
 
     @Id
     @GeneratedValue(strategy= GenerationType.AUTO)
     private int id;
-    private String name;
+    private String login;
 }

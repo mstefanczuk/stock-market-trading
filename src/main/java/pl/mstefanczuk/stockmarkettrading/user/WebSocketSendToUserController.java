@@ -1,11 +1,11 @@
-package pl.mstefanczuk.stockmarkettrading.controller;
+package pl.mstefanczuk.stockmarkettrading.user;
 
 import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.stereotype.Controller;
-import pl.mstefanczuk.stockmarkettrading.model.Message;
-import pl.mstefanczuk.stockmarkettrading.model.OutputMessage;
+import pl.mstefanczuk.stockmarkettrading.message.Message;
+import pl.mstefanczuk.stockmarkettrading.message.OutputMessage;
 
 import java.security.Principal;
 import java.text.SimpleDateFormat;
