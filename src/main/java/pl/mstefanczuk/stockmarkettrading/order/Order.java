@@ -13,8 +13,8 @@ import java.time.LocalDateTime;
 public class Order {
 
     @Id
-    @GeneratedValue(strategy= GenerationType.AUTO)
-    private int id;
+    @GeneratedValue(strategy= GenerationType.IDENTITY)
+    private Long id;
     @ManyToOne
     @JoinColumn(name="user_id", nullable=false)
     private User user;

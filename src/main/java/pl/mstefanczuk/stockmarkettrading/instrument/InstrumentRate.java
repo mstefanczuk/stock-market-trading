@@ -11,8 +11,8 @@ import java.time.LocalDateTime;
 public class InstrumentRate {
 
     @Id
-    @GeneratedValue(strategy= GenerationType.AUTO)
-    private int id;
+    @GeneratedValue(strategy= GenerationType.IDENTITY)
+    private Long id;
     @ManyToOne
     @JoinColumn(name="instrument_id", nullable=false)
     private Instrument instrument;

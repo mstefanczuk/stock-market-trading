@@ -10,21 +10,11 @@
 
         let stompClient = null;
 
-        function setConnected(connected) {
-
-            document.getElementById('connect').disabled = connected;
-            document.getElementById('disconnect').disabled = !connected;
-            document.getElementById('conversationDiv').style.visibility = connected ? 'visible' : 'hidden';
-            document.getElementById('response').innerHTML = '';
-        }
-
         function connect() {
             const socket = new SockJS('/greeting');
             stompClient = Stomp.over(socket);
 
             stompClient.connect({}, function (frame) {
-                setConnected(true);
-                console.log('Connected: ' + frame);
                 stompClient.subscribe("/user/queue/errors", function (message) {
                     showMessageOutput(JSON.parse(message.body));
                 });
@@ -41,19 +31,20 @@
             if (stompClient != null) {
                 stompClient.close();
             }
-            setConnected(false);
-            console.log("Disconnected");
         }
 
         function sendMessage() {
-
-            const from = document.getElementById('from').value;
+            const from = document.getElementById('login-input').value;
             const text = document.getElementById('text').value;
             stompClient.send("/app/message", {}, JSON.stringify({'from': from, 'text': text}));
         }
 
-        function showMessageOutput(messageOutput) {
+        function login() {
+            const login = document.getElementById('login-input').value;
+            stompClient.send("/app/login", {}, login);
+        }
 
+        function showMessageOutput(messageOutput) {
             const response = document.getElementById('response');
             const p = document.createElement('p');
             p.style.wordWrap = 'break-word';
@@ -65,20 +56,13 @@
 
 </head>
 
-<body onload="disconnect()">
+<body onload="connect()">
+<div>
+    <input type="text" id="login-input" placeholder="Login"/>
+    <button id="login-button" onclick="login();">Zaloguj</button>
+</div>
 
 <div>
-
-
-    <div>
-        <input type="text" id="from" placeholder="Choose a nickname"/>
-    </div>
-    <br/>
-    <div>
-        <button id="connect" onclick="connect();">Connect</button>
-        <button id="disconnect" disabled="disabled" onclick="disconnect();">Disconnect</button>
-    </div>
-    <br/>
     <div id="conversationDiv">
         <input type="text" id="text" placeholder="Write a message..."/>
         <button id="sendMessage" onclick="sendMessage();">Send</button>

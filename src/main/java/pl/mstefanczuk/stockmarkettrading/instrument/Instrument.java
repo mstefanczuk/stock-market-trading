@@ -12,7 +12,7 @@ import javax.persistence.Id;
 public class Instrument {
 
     @Id
-    @GeneratedValue(strategy= GenerationType.AUTO)
-    private int id;
+    @GeneratedValue(strategy= GenerationType.IDENTITY)
+    private Long id;
     private String name;
 }
