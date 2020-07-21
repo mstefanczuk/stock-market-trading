@@ -9,6 +9,7 @@
     <script type="text/javascript">
 
         let stompClient = null;
+        let user;
 
         function connect() {
             const socket = new SockJS('/greeting');
@@ -16,14 +17,14 @@
 
             stompClient.connect({}, function (frame) {
                 stompClient.subscribe("/user/queue/errors", function (message) {
-                    showMessageOutput(JSON.parse(message.body));
+                    showMessage(JSON.parse(message.body));
                 });
 
                 stompClient.subscribe("/user/queue/reply", function (message) {
-                    showMessageOutput(JSON.parse(message.body));
+                    showMessage(JSON.parse(message.body));
                 });
             }, function (error) {
-                alert("STOMP error " + error);
+                showMessage({body: "STOMP error: " + error, time: new Date().toLocaleString()});
             });
         }
 
@@ -33,41 +34,99 @@
             }
         }
 
-        function sendMessage() {
-            const from = document.getElementById('login-input').value;
-            const text = document.getElementById('text').value;
-            stompClient.send("/app/message", {}, JSON.stringify({'from': from, 'text': text}));
+        function saveLimits() {
+            const instruments = getInstruments();
+            if (instruments.length > 0) {
+                stompClient.send("/app/instrument/save", {}, JSON.stringify(instruments));
+            }
         }
 
-        function login() {
+        async function login() {
             const login = document.getElementById('login-input').value;
-            stompClient.send("/app/login", {}, login);
+            const response = await fetch('/user/save', {
+                method: 'POST',
+                body: login,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            user = await response.json();
+            showMessage({body: 'Zalogowano', time: new Date().toLocaleString()})
         }
 
-        function showMessageOutput(messageOutput) {
-            const response = document.getElementById('response');
+        function showMessage(message) {
+            const messageElement = document.getElementById('message');
             const p = document.createElement('p');
             p.style.wordWrap = 'break-word';
-            p.appendChild(document.createTextNode(messageOutput.from + ": " + messageOutput.text + " (" + messageOutput.time + ")"));
-            response.appendChild(p);
+            p.appendChild(document.createTextNode(message.time + ": " + message.body));
+            messageElement.appendChild(p);
         }
 
-    </script>
+        function getInstruments() {
+            let instruments = [];
+            [
+                {elementId: 'cdp-input', id: 1, name: 'CDPROJEKT'},
+                {elementId: 'tesla-input', id: 2, name: 'TESLA'},
+                {elementId: 'pge-input', id: 3, name: 'PGE'}
+            ].forEach(instrumentData => {
+                let instrument = getInstrument(instrumentData.elementId, instrumentData.id, instrumentData.name);
+                if (instrument.limitation && instrument.limitation > 0) {
+                    instruments.push(instrument);
+                }
+            })
+            return instruments;
+        }
 
+        function getInstrument(elementId, instrumentId, instrumentName) {
+            let limit = document.getElementById(elementId).value;
+            return {
+                user: {id: user.id, login: user.login},
+                instrument: {id: instrumentId, name: instrumentName},
+                limitation: limit,
+                amount: 0,
+                balance: 0
+            };
+        }
+    </script>
 </head>
 
 <body onload="connect()">
 <div>
     <input type="text" id="login-input" placeholder="Login"/>
     <button id="login-button" onclick="login();">Zaloguj</button>
+    <table>
+        <tr>
+            <td><label for="cdp-input">CDPROJEKT</label></td>
+            <td><input type="number" id="cdp-input" placeholder="Limit"/></td>
+            <td><label for="cdp-amount">Liczba posiadanych jednostek:</label></td>
+            <td>
+                <div id="cdp-amount">0</div>
+            </td>
+        </tr>
+        <tr>
+            <td><label for="tesla-input">TESLA</label></td>
+            <td><input type="number" id="tesla-input" placeholder="Limit"/></td>
+            <td><label for="tesla-amount">Liczba posiadanych jednostek:</label></td>
+            <td>
+                <div id="tesla-amount">0</div>
+            </td>
+        </tr>
+        <tr>
+            <td><label for="pge-input">PGE</label></td>
+            <td><input type="number" id="pge-input" placeholder="Limit"/></td>
+            <td><label for="pge-amount">Liczba posiadanych jednostek:</label></td>
+            <td>
+                <div id="pge-amount">0</div>
+            </td>
+        </tr>
+    </table>
+    <br>
+    <button id="save-limits-button" onclick="saveLimits();">Zapisz</button>
+    <br>
 </div>
 
 <div>
-    <div id="conversationDiv">
-        <input type="text" id="text" placeholder="Write a message..."/>
-        <button id="sendMessage" onclick="sendMessage();">Send</button>
-        <p id="response"></p>
-    </div>
+    <p id="message"></p>
 </div>
 
 </body>

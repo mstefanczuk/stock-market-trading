@@ -1,2 +1,3 @@
-INSERT INTO instrument VALUES(1, 'TESLA');
-INSERT INTO instrument VALUES(2, 'CDPROJEKT');
+INSERT INTO instrument VALUES(1, 'CDPROJEKT');
+INSERT INTO instrument VALUES(2, 'TESLA');
+INSERT INTO instrument VALUES(3, 'PGE');

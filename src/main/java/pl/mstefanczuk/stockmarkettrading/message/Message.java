@@ -1,12 +1,11 @@
 package pl.mstefanczuk.stockmarkettrading.message;
 
+import lombok.Builder;
 import lombok.Data;
 
 @Data
+@Builder
 public class Message {
-    //prawdopodobnie do wyrzucenia, ale zostawiam zeby nie zapomniec jak dziala rozwiazanie z websocketami
-
-    private String from;
-    private String text;
-
+    private String body;
+    private String time;
 }
