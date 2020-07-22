@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Data
-public class InstrumentRate {
+public class InstrumentPrice {
 
     @Id
     @GeneratedValue(strategy= GenerationType.IDENTITY)
@@ -16,7 +16,6 @@ public class InstrumentRate {
     @ManyToOne
     @JoinColumn(name="instrument_id", nullable=false)
     private Instrument instrument;
-    private BigDecimal buyingRate;
-    private BigDecimal sellingRate;
+    private BigDecimal price;
     private LocalDateTime lastUpdateTime;
 }

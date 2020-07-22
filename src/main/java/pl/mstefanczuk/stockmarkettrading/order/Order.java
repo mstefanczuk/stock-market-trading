@@ -23,9 +23,9 @@ public class Order {
     private Instrument instrument;
     private BigDecimal amount;
     private Type type;
-    private BigDecimal buyingRate;
-    private BigDecimal sellingRate;
-    private LocalDateTime dateTime;
+    private BigDecimal price;
+    private LocalDateTime requestDateTime;
+    private LocalDateTime responseDateTime;
 
     public enum Type {
         BUY, SELL
