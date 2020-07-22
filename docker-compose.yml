@@ -10,6 +10,15 @@ services:
       - "8080:8080"
     depends_on:
       - db
+      - stock-market-service
+  stock-market-service:
+    container_name: stock-market-service
+    image: docker/stock-market-service
+    build:
+      context: .
+      dockerfile: docker/stock-market-service/Dockerfile
+    ports:
+      - "8081:8080"
   db:
     image: postgres
     ports:
