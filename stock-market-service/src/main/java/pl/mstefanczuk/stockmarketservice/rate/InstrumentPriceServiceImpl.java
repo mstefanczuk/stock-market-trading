@@ -23,16 +23,20 @@ public class InstrumentPriceServiceImpl implements InstrumentPriceService {
     }
 
     @Override
-    @Scheduled(fixedRate = 1000)
+    @Scheduled(fixedRate = 100)
     public void broadcastCurrentPrices() {
         template.convertAndSend("/topic/current-prices", getAllCurrent());
     }
 
     private Map<Long, BigDecimal> getAllCurrent() {
         Map<Long, BigDecimal> map = new HashMap<>();
-        map.put(1L, BigDecimal.valueOf(10.00));
-        map.put(2L, BigDecimal.valueOf(20.00));
-        map.put(3L, BigDecimal.valueOf(30.00));
+        map.put(1L, getRandom());
+        map.put(2L, getRandom());
+        map.put(3L, getRandom());
         return map;
+    }
+
+    private BigDecimal getRandom() {
+        return BigDecimal.valueOf(Math.random()).setScale(2, BigDecimal.ROUND_HALF_UP);
     }
 }
