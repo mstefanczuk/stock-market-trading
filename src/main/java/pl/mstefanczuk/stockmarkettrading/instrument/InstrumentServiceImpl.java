@@ -28,7 +28,7 @@ public class InstrumentServiceImpl implements InstrumentService {
         currentPrices = prices;
         template.convertAndSend("/topic/current-prices",
                 Message.builder()
-                        .body(prices.toString())
+                        .body("CDPROJEKT: " + prices.get(1L) + " TESLA: " + prices.get(2L) + " PGE: " + prices.get(3L))
                         .time(LocalDateTime.now().toString())
                         .build());
     }

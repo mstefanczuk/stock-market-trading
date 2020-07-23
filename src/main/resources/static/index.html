@@ -25,7 +25,7 @@
                 })
 
                 stompClient.subscribe("/topic/current-prices", function (message) {
-                    showMessage(JSON.parse(message.body));
+                    updatePrices(JSON.parse(message.body));
                 });
             }, function (error) {
                 showMessage({body: "STOMP error: " + error, time: new Date().toLocaleString()});
@@ -64,6 +64,11 @@
             p.style.wordWrap = 'break-word';
             p.appendChild(document.createTextNode(message.time + ": " + message.body));
             messageElement.appendChild(p);
+        }
+
+        function updatePrices(message) {
+            const pricesElement = document.getElementById('current-prices');
+            pricesElement.textContent = message.body;
         }
 
         function getInstruments() {
@@ -128,6 +133,8 @@
     <button id="save-limits-button" onclick="saveLimits();">Zapisz</button>
     <br>
 </div>
+
+<div id="current-prices"></div>
 
 <div>
     <p id="message"></p>
