@@ -22,6 +22,10 @@
 
                 stompClient.subscribe("/user/queue/reply", function (message) {
                     showMessage(JSON.parse(message.body));
+                })
+
+                stompClient.subscribe("/topic/current-prices", function (message) {
+                    showMessage(JSON.parse(message.body));
                 });
             }, function (error) {
                 showMessage({body: "STOMP error: " + error, time: new Date().toLocaleString()});
@@ -37,7 +41,7 @@
         function saveLimits() {
             const instruments = getInstruments();
             if (instruments.length > 0) {
-                stompClient.send("/app/instrument/save", {}, JSON.stringify(instruments));
+                stompClient.send("/instrument/save", {}, JSON.stringify(instruments));
             }
         }
 
