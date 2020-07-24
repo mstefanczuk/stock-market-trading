@@ -24,7 +24,19 @@ CREATE TABLE instrument_price
     CONSTRAINT instrument_price_pkey PRIMARY KEY (id)
 );
 DROP INDEX IF EXISTS instrument_price_id_idx CASCADE;
-CREATE INDEX instrument_price_id_idx ON instrument (id);
+CREATE INDEX instrument_price_id_idx ON instrument_price (id);
+
+DROP TABLE IF EXISTS instrument_price_history CASCADE;
+CREATE TABLE instrument_price_history
+(
+    id               serial  NOT NULL,
+    instrument_id    integer NOT NULL REFERENCES instrument,
+    price            numeric NOT NULL,
+    date_time timestamp without time zone,
+    CONSTRAINT instrument_price_history_pkey PRIMARY KEY (id)
+);
+DROP INDEX IF EXISTS instrument_price_history_id_idx CASCADE;
+CREATE INDEX instrument_price_history_id_idx ON instrument_price_history (id);
 
 DROP TABLE IF EXISTS "user" CASCADE;
 CREATE TABLE "user"
