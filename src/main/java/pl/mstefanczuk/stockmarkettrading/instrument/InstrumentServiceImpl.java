@@ -29,12 +29,12 @@ public class InstrumentServiceImpl implements InstrumentService {
     public void setCurrentPrices(Map<Long, BigDecimal> prices) {
         List<InstrumentPrice> instrumentPriceList = new ArrayList<>();
         prices.forEach((k, v) -> {
+            InstrumentPrice instrumentPrice = createInstrumentPrice(instrumentRepository.findById(k).orElse(null), v);
+            instrumentPriceList.add(instrumentPrice);
             if (currentPrices.get(k) == null || v.compareTo(currentPrices.get(k)) != 0) {
                 currentPrices.put(k, v);
-                InstrumentPrice instrumentPrice = instrumentPriceRepository.save(
-                        createInstrumentPrice(instrumentRepository.findById(k).orElse(null), v));
+                instrumentPriceRepository.save(instrumentPrice);
                 instrumentPriceHistoryRepository.save(createInstrumentPriceHistory(instrumentPrice));
-                instrumentPriceList.add(instrumentPrice);
             }
         });
         sendCurrentPricesOnTopic(instrumentPriceList);
