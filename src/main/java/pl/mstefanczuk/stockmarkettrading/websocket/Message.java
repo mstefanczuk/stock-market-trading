@@ -1,4 +1,4 @@
-package pl.mstefanczuk.stockmarkettrading.message;
+package pl.mstefanczuk.stockmarkettrading.websocket;
 
 import lombok.Builder;
 import lombok.Data;

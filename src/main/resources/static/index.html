@@ -20,15 +20,24 @@
                     showMessage(JSON.parse(message.body));
                 });
 
-                stompClient.subscribe("/user/queue/reply", function (message) {
-                    showMessage(JSON.parse(message.body));
+                stompClient.subscribe("/user/queue/instruments", function (message) {
+                    showInstruments(JSON.parse(message.body));
+                })
+
+                stompClient.subscribe("/user/queue/orders", function (message) {
+                    showOrder(JSON.parse(message.body));
                 })
 
                 stompClient.subscribe("/topic/current-prices", function (message) {
                     updatePrices(JSON.parse(message.body));
                 });
+
+                stompClient.subscribe("/user/queue/login", function (message) {
+                    user = JSON.parse(message.body);
+                    showMessage({body: user.login + ': Zalogowano', time: getCurrentDateTime()})
+                });
             }, function (error) {
-                showMessage({body: "STOMP error: " + error, time: new Date().toLocaleString()});
+                showMessage({body: "STOMP error: " + error, time: getCurrentDateTime()});
             });
         }
 
@@ -38,24 +47,17 @@
             }
         }
 
-        function saveLimits() {
+        function saveInstruments() {
             const instruments = getInstruments();
             if (instruments.length > 0) {
                 stompClient.send("/instrument/save", {}, JSON.stringify(instruments));
+                showMessage({body: "Zapisano instrumenty", time: getCurrentDateTime()});
             }
         }
 
         async function login() {
             const login = document.getElementById('login-input').value;
-            const response = await fetch('/user/save', {
-                method: 'POST',
-                body: login,
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-            user = await response.json();
-            showMessage({body: 'Zalogowano', time: new Date().toLocaleString()})
+            stompClient.send("/users/save", {}, JSON.stringify(login));
         }
 
         function showMessage(message) {
@@ -79,7 +81,7 @@
                 {elementId: 'pge-input', id: 3, name: 'PGE'}
             ].forEach(instrumentData => {
                 let instrument = getInstrument(instrumentData.elementId, instrumentData.id, instrumentData.name);
-                if (instrument.limitation && instrument.limitation > 0) {
+                if (instrument.tradingAmount && instrument.tradingAmount > 0) {
                     instruments.push(instrument);
                 }
             })
@@ -87,14 +89,43 @@
         }
 
         function getInstrument(elementId, instrumentId, instrumentName) {
-            let limit = document.getElementById(elementId).value;
+            let tradingAmount = document.getElementById(elementId).value;
             return {
                 user: {id: user.id, login: user.login},
                 instrument: {id: instrumentId, name: instrumentName},
-                limitation: limit,
-                amount: 0,
-                balance: 0
+                tradingAmount: tradingAmount
             };
+        }
+
+        function showInstruments(instruments) {
+            const instrumentsMap = new Map([[1, 'cdp'], [2, 'tesla'], [3, 'pge']]);
+            instruments.forEach(i => {
+                const amountElement = document.getElementById(instrumentsMap.get(i.instrument.id) + '-amount');
+                const balanceElement = document.getElementById(instrumentsMap.get(i.instrument.id) + '-balance');
+                amountElement.textContent = i.amount;
+                balanceElement.textContent = i.balance;
+            })
+        }
+
+        function showOrder(order) {
+           showMessage({
+               body: (order.type.id === 1 ? 'Zakupiono: ' : 'Sprzedano: ') +
+                   'Id instrumentu: ' + order.instrument.id +
+                   ' Liczba: ' + order.amount +
+                   ' Cena lokalna: ' + order.localAmount +
+                   ' Cena rzeczywista: ' + order.stockServicePrice +
+                   ' Czas zapytania: ' + order.requestDateTime +
+                   ' Czas odpowiedzi: ' + order.responseDateTime,
+               time: getCurrentDateTime()
+           });
+        }
+
+        function getCurrentDateTime() {
+            let m = new Date();
+            return ("0" + m.getUTCHours()).slice(-2) + ":" +
+                ("0" + m.getUTCMinutes()).slice(-2) + ":" +
+                ("0" + m.getUTCSeconds()).slice(-2) + ":" +
+                ("0" + m.getUTCMilliseconds()).slice(-2);
         }
     </script>
 </head>
@@ -106,31 +137,43 @@
     <table>
         <tr>
             <td><label for="cdp-input">CDPROJEKT</label></td>
-            <td><input type="number" id="cdp-input" placeholder="Limit"/></td>
+            <td><input type="number" id="cdp-input" placeholder="Liczba jednostek w transakcji"/></td>
             <td><label for="cdp-amount">Liczba posiadanych jednostek:</label></td>
             <td>
                 <div id="cdp-amount">0</div>
             </td>
+            <td><label for="cdp-balance">Bilans:</label></td>
+            <td>
+                <div id="cdp-balance">0</div>
+            </td>
         </tr>
         <tr>
             <td><label for="tesla-input">TESLA</label></td>
-            <td><input type="number" id="tesla-input" placeholder="Limit"/></td>
+            <td><input type="number" id="tesla-input" placeholder="Liczba jednostek w transakcji"/></td>
             <td><label for="tesla-amount">Liczba posiadanych jednostek:</label></td>
             <td>
                 <div id="tesla-amount">0</div>
             </td>
+            <td><label for="tesla-balance">Bilans:</label></td>
+            <td>
+                <div id="tesla-balance">0</div>
+            </td>
         </tr>
         <tr>
             <td><label for="pge-input">PGE</label></td>
-            <td><input type="number" id="pge-input" placeholder="Limit"/></td>
+            <td><input type="number" id="pge-input" placeholder="Liczba jednostek w transakcji"/></td>
             <td><label for="pge-amount">Liczba posiadanych jednostek:</label></td>
             <td>
                 <div id="pge-amount">0</div>
             </td>
+            <td><label for="pge-balance">Bilans:</label></td>
+            <td>
+                <div id="pge-balance">0</div>
+            </td>
         </tr>
     </table>
     <br>
-    <button id="save-limits-button" onclick="saveLimits();">Zapisz</button>
+    <button id="save-instruments-button" onclick="saveInstruments();">Zapisz</button>
     <br>
 </div>
 

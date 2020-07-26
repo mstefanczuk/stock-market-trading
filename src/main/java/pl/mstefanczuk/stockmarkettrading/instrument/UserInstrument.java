@@ -19,7 +19,7 @@ public class UserInstrument {
     @ManyToOne
     @JoinColumn(name = "instrument_id", nullable = false)
     private Instrument instrument;
-    private BigDecimal limitation;
+    private BigDecimal tradingAmount;
     private BigDecimal amount;
     private BigDecimal balance;
 }

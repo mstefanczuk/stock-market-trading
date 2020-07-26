@@ -4,31 +4,26 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.stereotype.Controller;
-import pl.mstefanczuk.stockmarkettrading.message.Message;
+import pl.mstefanczuk.stockmarkettrading.order.OrderService;
 
-import java.time.LocalDateTime;
+import java.security.Principal;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 @Controller
 @RequiredArgsConstructor
 public class InstrumentController {
 
     private final InstrumentService instrumentService;
+    private final OrderService orderService;
 
     @MessageMapping("/instrument/save")
-    @SendToUser("/queue/reply")
-    public Message save(final List<UserInstrument> instruments) {
-        instrumentService.saveAll(instruments);
-        return Message.builder()
-                .body("Zapisano limity. " + getLimits(instruments))
-                .time(LocalDateTime.now().toString())
-                .build();
-    }
-
-    private String getLimits(List<UserInstrument> instruments) {
-        return instruments.stream()
-                .map(i -> i.getInstrument().getName() + ": " + i.getLimitation())
-                .collect(Collectors.joining(", "));
+    @SendToUser("/queue/instruments")
+    public List<UserInstrument> save(final List<UserInstrument> instruments, Principal principal) {
+        List<UserInstrument> savedInstruments = StreamSupport.stream(instrumentService.saveAll(instruments).spliterator(), false)
+                .collect(Collectors.toList());
+        new Thread(() -> orderService.startListening(savedInstruments.get(0).getUser(), principal)).start();
+        return savedInstruments;
     }
 }

@@ -1,14 +1,13 @@
-package pl.mstefanczuk.stockmarkettrading.user;
+package pl.mstefanczuk.stockmarkettrading.websocket;
 
 import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
 import org.springframework.messaging.simp.annotation.SendToUser;
-import org.springframework.stereotype.Controller;
-import pl.mstefanczuk.stockmarkettrading.message.Message;
+import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 
-@Controller
-public class WebSocketSendToUserController {
+@Component
+public class WebSocketErrorHandler {
 
     @MessageExceptionHandler
     @SendToUser("/queue/errors")

@@ -14,6 +14,11 @@ import java.util.Random;
 @Slf4j
 public class InstrumentPriceServiceImpl implements InstrumentPriceService {
 
+    public static final int CDP_TICK = 4;
+    public static final int TESLA_TICK = 6;
+    public static final int PGE_TICK = 7;
+    public static final int SEND_RATE = 100;
+
     private final SimpMessagingTemplate template;
 
     private final Map<Long, BigDecimal> currentPrices = new HashMap<>();
@@ -43,14 +48,14 @@ public class InstrumentPriceServiceImpl implements InstrumentPriceService {
     }
 
     @Override
-    @Scheduled(fixedRate = 100)
+    @Scheduled(fixedRate = SEND_RATE)
     public void broadcastCurrentPrices() {
         template.convertAndSend("/topic/current-prices", currentPrices);
     }
 
-    @Scheduled(fixedRate = 100)
+    @Scheduled(fixedRate = SEND_RATE)
     public void processCdpPriceChanging() {
-        if (cdpCounter == 20) {
+        if (cdpCounter == CDP_TICK) {
             cdpDifference = getRandom();
             cdpPrice = cdpPrice.add(cdpDifference);
             if (cdpPrice.compareTo(BigDecimal.ZERO) < 0) {
@@ -59,7 +64,7 @@ public class InstrumentPriceServiceImpl implements InstrumentPriceService {
             currentPrices.put(1L, cdpPrice);
         }
 
-        if (cdpCounter == 21) {
+        if (cdpCounter == CDP_TICK + 1) {
             cdpPrice = cdpPrice.subtract(cdpDifference);
             currentPrices.put(1L, cdpPrice);
             cdpCounter = 0;
@@ -68,9 +73,9 @@ public class InstrumentPriceServiceImpl implements InstrumentPriceService {
         cdpCounter++;
     }
 
-    @Scheduled(fixedRate = 200)
+    @Scheduled(fixedRate = SEND_RATE*2)
     public void processTeslaPriceChanging() {
-        if (teslaCounter == 20) {
+        if (teslaCounter == TESLA_TICK) {
             teslaDifference = getRandom();
             teslaPrice = teslaPrice.add(teslaDifference);
             if (teslaPrice.compareTo(BigDecimal.ZERO) < 0) {
@@ -79,7 +84,7 @@ public class InstrumentPriceServiceImpl implements InstrumentPriceService {
             currentPrices.put(2L, teslaPrice);
         }
 
-        if (teslaCounter == 21) {
+        if (teslaCounter == TESLA_TICK + 1) {
             teslaPrice = teslaPrice.subtract(teslaDifference);
             currentPrices.put(2L, teslaPrice);
             teslaCounter = 0;
@@ -87,9 +92,9 @@ public class InstrumentPriceServiceImpl implements InstrumentPriceService {
         teslaCounter++;
     }
 
-    @Scheduled(fixedRate = 300)
+    @Scheduled(fixedRate = SEND_RATE*3)
     public void processPgePriceChanging() {
-        if (pgeCounter == 20) {
+        if (pgeCounter == PGE_TICK) {
             pgeDifference = getRandom();
             pgePrice = pgePrice.add(pgeDifference);
             if (pgePrice.compareTo(BigDecimal.ZERO) < 0) {
@@ -98,7 +103,7 @@ public class InstrumentPriceServiceImpl implements InstrumentPriceService {
             currentPrices.put(3L, pgePrice);
         }
 
-        if (pgeCounter == 21) {
+        if (pgeCounter == PGE_TICK + 1) {
             pgePrice = pgePrice.subtract(pgeDifference);
             currentPrices.put(3L, pgePrice);
             pgeCounter = 0;

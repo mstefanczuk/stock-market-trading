@@ -1,22 +1,21 @@
 package pl.mstefanczuk.stockmarkettrading.user;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.simp.annotation.SendToUser;
+import org.springframework.stereotype.Controller;
 
-@RestController()
-@RequestMapping("user")
+@Controller
 @RequiredArgsConstructor
+@Slf4j
 public class UserController {
 
     private final UserService userService;
 
-    @PostMapping("/save")
-    public User login(@RequestBody String login) {
-        User user = new User();
-        user.setLogin(login);
-        return userService.save(user);
+    @MessageMapping("/users/save")
+    @SendToUser("/queue/login")
+    public User login(final String login) {
+        return userService.save(login);
     }
 }

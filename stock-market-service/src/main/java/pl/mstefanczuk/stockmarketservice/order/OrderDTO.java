@@ -1,10 +1,14 @@
 package pl.mstefanczuk.stockmarketservice.order;
 
-import lombok.Value;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 
-@Value
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
 public class OrderDTO {
     Long instrumentId;
     Long userId;

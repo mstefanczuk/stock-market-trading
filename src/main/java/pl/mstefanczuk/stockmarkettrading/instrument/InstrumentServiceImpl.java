@@ -3,15 +3,16 @@ package pl.mstefanczuk.stockmarkettrading.instrument;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
-import pl.mstefanczuk.stockmarkettrading.message.Message;
+import pl.mstefanczuk.stockmarkettrading.websocket.Message;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 @Service
 @RequiredArgsConstructor
@@ -23,10 +24,16 @@ public class InstrumentServiceImpl implements InstrumentService {
     private final InstrumentPriceHistoryRepository instrumentPriceHistoryRepository;
     private final SimpMessagingTemplate template;
 
-    private final Map<Long, BigDecimal> currentPrices = new HashMap<>();
+    @Override
+    public Map<Long, BigDecimal> getCurrentPrices() {
+        return StreamSupport.stream(instrumentPriceRepository.findAll().spliterator(), false)
+                .collect(Collectors.toMap(InstrumentPrice::getId, InstrumentPrice::getPrice));
+    }
 
     @Override
     public void setCurrentPrices(Map<Long, BigDecimal> prices) {
+        AtomicBoolean isChange = new AtomicBoolean(false);
+        Map<Long, BigDecimal> currentPrices = getCurrentPrices();
         List<InstrumentPrice> instrumentPriceList = new ArrayList<>();
         prices.forEach((k, v) -> {
             InstrumentPrice instrumentPrice = createInstrumentPrice(instrumentRepository.findById(k).orElse(null), v);
@@ -35,14 +42,38 @@ public class InstrumentServiceImpl implements InstrumentService {
                 currentPrices.put(k, v);
                 instrumentPriceRepository.save(instrumentPrice);
                 instrumentPriceHistoryRepository.save(createInstrumentPriceHistory(instrumentPrice));
+                isChange.set(true);
             }
         });
-        sendCurrentPricesOnTopic(instrumentPriceList);
+        if (isChange.get()) {
+            sendCurrentPricesOnTopic(instrumentPriceList);
+        }
     }
 
     @Override
     public Iterable<UserInstrument> saveAll(Iterable<UserInstrument> instruments) {
+        instruments.forEach(i -> {
+            setUserInstrumentNullValues(i);
+            userInstrumentRepository.findByUserIdAndInstrumentId(i.getUser().getId(), i.getInstrument().getId())
+                    .ifPresent(instrument -> i.setId(instrument.getId()));
+        });
         return userInstrumentRepository.saveAll(instruments);
+    }
+
+    @Override
+    public UserInstrument save(UserInstrument userInstrument) {
+        setUserInstrumentNullValues(userInstrument);
+        return userInstrumentRepository.save(userInstrument);
+    }
+
+    @Override
+    public UserInstrument findUserInstrument(Long userId, Long instrumentId) {
+        return userInstrumentRepository.findByUserIdAndInstrumentId(userId, instrumentId).orElse(null);
+    }
+
+    @Override
+    public Instrument findById(Long id) {
+        return instrumentRepository.findById(id).orElse(null);
     }
 
     private InstrumentPrice createInstrumentPrice(Instrument instrument, BigDecimal price) {
@@ -70,5 +101,17 @@ public class InstrumentServiceImpl implements InstrumentService {
                                 .collect(Collectors.joining(", ")))
                         .time(LocalDateTime.now().toString())
                         .build());
+    }
+
+    private void setUserInstrumentNullValues(UserInstrument instrument) {
+        if (instrument.getAmount() == null) {
+            instrument.setAmount(BigDecimal.valueOf(1000.00));
+        }
+        if (instrument.getTradingAmount() == null) {
+            instrument.setTradingAmount(BigDecimal.ZERO);
+        }
+        if (instrument.getBalance() == null) {
+            instrument.setBalance(BigDecimal.ZERO);
+        }
     }
 }

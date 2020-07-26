@@ -29,10 +29,10 @@ CREATE INDEX instrument_price_id_idx ON instrument_price (id);
 DROP TABLE IF EXISTS instrument_price_history CASCADE;
 CREATE TABLE instrument_price_history
 (
-    id               serial  NOT NULL,
-    instrument_id    integer NOT NULL REFERENCES instrument,
-    price            numeric NOT NULL,
-    date_time timestamp without time zone,
+    id            serial  NOT NULL,
+    instrument_id integer NOT NULL REFERENCES instrument,
+    price         numeric NOT NULL,
+    date_time     timestamp without time zone,
     CONSTRAINT instrument_price_history_pkey PRIMARY KEY (id)
 );
 DROP INDEX IF EXISTS instrument_price_history_id_idx CASCADE;
@@ -53,9 +53,9 @@ DROP TABLE IF EXISTS order_type CASCADE;
 CREATE TABLE order_type
 (
     id   serial NOT NULL,
-    type text   NOT NULL,
+    name text   NOT NULL,
     CONSTRAINT order_type_pkey PRIMARY KEY (id),
-    CONSTRAINT order_type_type_key UNIQUE (type)
+    CONSTRAINT order_type_type_key UNIQUE (name)
 );
 DROP INDEX IF EXISTS order_type_id_idx CASCADE;
 CREATE INDEX order_type_id_idx ON order_type (id);
@@ -63,14 +63,15 @@ CREATE INDEX order_type_id_idx ON order_type (id);
 DROP TABLE IF EXISTS "order" CASCADE;
 CREATE TABLE "order"
 (
-    id                 serial  NOT NULL,
-    user_id            integer NOT NULL REFERENCES "user",
-    instrument_id      integer NOT NULL REFERENCES instrument,
-    amount             numeric NOT NULL,
-    type_id            integer NOT NULL REFERENCES order_type,
-    price              numeric NOT NULL,
-    request_date_time  timestamp without time zone,
-    response_date_time timestamp without time zone,
+    id                  serial  NOT NULL,
+    user_id             integer NOT NULL REFERENCES "user",
+    instrument_id       integer NOT NULL REFERENCES instrument,
+    amount              numeric NOT NULL,
+    type_id             integer NOT NULL REFERENCES order_type,
+    local_price         numeric NOT NULL,
+    stock_service_price numeric NOT NULL,
+    request_date_time   timestamp without time zone,
+    response_date_time  timestamp without time zone,
     CONSTRAINT order_pkey PRIMARY KEY (id)
 );
 DROP INDEX IF EXISTS order_id_idx CASCADE;
@@ -82,9 +83,9 @@ CREATE TABLE user_instrument
     id            serial  NOT NULL,
     user_id       integer NOT NULL REFERENCES "user",
     instrument_id integer NOT NULL REFERENCES instrument,
-    limitation    numeric NOT NULL,
-    amount        numeric NOT NULL,
-    balance       numeric,
+    trading_amount  numeric NOT NULL default 0,
+    amount        numeric NOT NULL default 0,
+    balance       numeric NOT NULL default 0,
     CONSTRAINT user_instrument_pkey PRIMARY KEY (id)
 );
 DROP INDEX IF EXISTS user_instrument_id_idx CASCADE;

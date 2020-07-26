@@ -9,6 +9,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "`order`")
 @Data
 public class Order {
 
@@ -22,12 +23,22 @@ public class Order {
     @JoinColumn(name="instrument_id", nullable=false)
     private Instrument instrument;
     private BigDecimal amount;
-    private Type type;
-    private BigDecimal price;
+    @ManyToOne
+    @JoinColumn(name="type_id", nullable=false)
+    private OrderType type;
+    private BigDecimal localPrice;
+    private BigDecimal stockServicePrice;
     private LocalDateTime requestDateTime;
     private LocalDateTime responseDateTime;
 
     public enum Type {
-        BUY, SELL
+        BUY(1),
+        SELL(2);
+
+        public final Integer id;
+
+        private Type(Integer id) {
+            this.id = id;
+        }
     }
 }
