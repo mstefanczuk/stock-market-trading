@@ -5,9 +5,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-import pl.mstefanczuk.stockmarketservice.rate.InstrumentPriceService;
+import pl.mstefanczuk.stockmarketservice.price.InstrumentPriceService;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @RestController
 @RequiredArgsConstructor
@@ -26,8 +28,11 @@ public class OrderController {
     }
 
     private OrderResultDTO getOrderResultDTO(OrderDTO order) {
+        LocalDateTime dateTime = LocalDateTime.ofInstant(Instant
+                .ofEpochMilli(instrumentPriceService.getCurrent(order.getInstrumentId()).getUpdateTime()),
+                ZoneId.systemDefault());
         return new OrderResultDTO(order.getInstrumentId(),
                 order.getUserId(), order.getTypeId(), order.getAmount(),
-                instrumentPriceService.getCurrent(order.getInstrumentId()), LocalDateTime.now());
+                instrumentPriceService.getCurrent(order.getInstrumentId()).getValue(), dateTime, LocalDateTime.now());
     }
 }

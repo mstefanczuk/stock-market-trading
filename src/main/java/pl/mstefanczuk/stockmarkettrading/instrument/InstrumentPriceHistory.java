@@ -16,5 +16,6 @@ public class InstrumentPriceHistory {
     @JoinColumn(name="instrument_id", nullable=false)
     private Instrument instrument;
     private BigDecimal price;
-    private LocalDateTime dateTime;
+    private LocalDateTime stockServiceUpdateTime;
+    private LocalDateTime updateTime;
 }

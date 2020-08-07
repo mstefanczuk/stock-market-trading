@@ -7,9 +7,15 @@ import org.springframework.messaging.simp.stomp.StompHeaders;
 import org.springframework.messaging.simp.stomp.StompSession;
 import org.springframework.messaging.simp.stomp.StompSessionHandlerAdapter;
 import pl.mstefanczuk.stockmarkettrading.instrument.InstrumentService;
+import pl.mstefanczuk.stockmarkettrading.instrument.Price;
+import pl.mstefanczuk.stockmarkettrading.instrument.ServicePriceDTO;
 
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -31,14 +37,22 @@ public class StockMarketServiceStompSessionHandler extends StompSessionHandlerAd
 
     @Override
     public Type getPayloadType(StompHeaders headers) {
-        return Map.class;
+        return LongServicePriceMap.class;
     }
 
     @Override
     public void handleFrame(StompHeaders headers, Object payload) {
-        Map<String, Double> response = (Map<String, Double>) payload;
-        Map<Long, BigDecimal> convertedResponse = response.entrySet().stream()
-                .collect(Collectors.toMap(k -> Long.valueOf(k.getKey()), e -> BigDecimal.valueOf(e.getValue())));
+        LongServicePriceMap response = (LongServicePriceMap) payload;
+        Map<Long, Price> convertedResponse = response.entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, e -> fromDto(e.getValue())));
         instrumentService.setCurrentPrices(convertedResponse);
+    }
+
+    private Price fromDto(ServicePriceDTO dto) {
+        LocalDateTime dateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(dto.getUpdateTime()), ZoneId.systemDefault());
+        return new Price(BigDecimal.valueOf(dto.getValue()), dateTime);
+    }
+
+    private static class LongServicePriceMap extends HashMap<Long, ServicePriceDTO> {
     }
 }

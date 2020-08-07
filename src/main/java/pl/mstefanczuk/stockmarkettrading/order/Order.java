@@ -27,7 +27,9 @@ public class Order {
     @JoinColumn(name="type_id", nullable=false)
     private OrderType type;
     private BigDecimal localPrice;
+    private LocalDateTime localPriceUpdateTime;
     private BigDecimal stockServicePrice;
+    private LocalDateTime stockServicePriceUpdateTime;
     private LocalDateTime requestDateTime;
     private LocalDateTime responseDateTime;
 

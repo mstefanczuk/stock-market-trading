@@ -1,4 +1,4 @@
-package pl.mstefanczuk.stockmarketservice.rate;
+package pl.mstefanczuk.stockmarketservice.price;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -14,18 +14,18 @@ import java.util.Random;
 @Slf4j
 public class InstrumentPriceServiceImpl implements InstrumentPriceService {
 
-    public static final int CDP_TICK = 4;
-    public static final int TESLA_TICK = 6;
-    public static final int PGE_TICK = 7;
-    public static final int SEND_RATE = 100;
+    public static final int CDP_TICK = 400;
+    public static final int TESLA_TICK = 600;
+    public static final int PGE_TICK = 700;
+    public static final int SEND_RATE = 10;
 
     private final SimpMessagingTemplate template;
 
-    private final Map<Long, BigDecimal> currentPrices = new HashMap<>();
+    private final Map<Long, Price> currentPrices = new HashMap<>();
 
-    private BigDecimal cdpPrice = BigDecimal.valueOf(100.00);
-    private BigDecimal teslaPrice = BigDecimal.valueOf(200.00);
-    private BigDecimal pgePrice = BigDecimal.valueOf(300.00);
+    private final Price cdpPrice = new Price(BigDecimal.valueOf(100.00), System.currentTimeMillis());
+    private final Price teslaPrice = new Price(BigDecimal.valueOf(200.00), System.currentTimeMillis());
+    private final Price pgePrice = new Price(BigDecimal.valueOf(300.00), System.currentTimeMillis());
 
     private int cdpCounter = 0;
     private int teslaCounter = 0;
@@ -43,7 +43,7 @@ public class InstrumentPriceServiceImpl implements InstrumentPriceService {
     }
 
     @Override
-    public BigDecimal getCurrent(Long id) {
+    public Price getCurrent(Long id) {
         return currentPrices.get(id);
     }
 
@@ -55,59 +55,67 @@ public class InstrumentPriceServiceImpl implements InstrumentPriceService {
 
     @Scheduled(fixedRate = SEND_RATE)
     public void processCdpPriceChanging() {
+        BigDecimal price = BigDecimal.valueOf(100.00);
         if (cdpCounter == CDP_TICK) {
             cdpDifference = getRandom();
-            cdpPrice = cdpPrice.add(cdpDifference);
-            if (cdpPrice.compareTo(BigDecimal.ZERO) < 0) {
-                cdpPrice = cdpPrice.subtract(cdpDifference);
+            price = cdpPrice.getValue().add(cdpDifference);
+            if (price.compareTo(BigDecimal.ZERO) < 0) {
+                price = price.subtract(cdpDifference);
             }
-            currentPrices.put(1L, cdpPrice);
         }
 
         if (cdpCounter == CDP_TICK + 1) {
-            cdpPrice = cdpPrice.subtract(cdpDifference);
-            currentPrices.put(1L, cdpPrice);
+            price = cdpPrice.getValue().subtract(cdpDifference);
             cdpCounter = 0;
         }
 
+        cdpPrice.setValue(price);
+        cdpPrice.setUpdateTime(System.currentTimeMillis());
+        currentPrices.put(1L, cdpPrice);
         cdpCounter++;
     }
 
-    @Scheduled(fixedRate = SEND_RATE*2)
+    @Scheduled(fixedRate = SEND_RATE * 2)
     public void processTeslaPriceChanging() {
+        BigDecimal price = BigDecimal.valueOf(200.00);
         if (teslaCounter == TESLA_TICK) {
             teslaDifference = getRandom();
-            teslaPrice = teslaPrice.add(teslaDifference);
-            if (teslaPrice.compareTo(BigDecimal.ZERO) < 0) {
-                teslaPrice = teslaPrice.subtract(teslaDifference);
+            price = teslaPrice.getValue().add(teslaDifference);
+            if (price.compareTo(BigDecimal.ZERO) < 0) {
+                price = price.subtract(teslaDifference);
             }
-            currentPrices.put(2L, teslaPrice);
         }
 
         if (teslaCounter == TESLA_TICK + 1) {
-            teslaPrice = teslaPrice.subtract(teslaDifference);
-            currentPrices.put(2L, teslaPrice);
+            price = teslaPrice.getValue().subtract(teslaDifference);
             teslaCounter = 0;
         }
+
+        teslaPrice.setValue(price);
+        teslaPrice.setUpdateTime(System.currentTimeMillis());
+        currentPrices.put(2L, teslaPrice);
         teslaCounter++;
     }
 
-    @Scheduled(fixedRate = SEND_RATE*3)
+    @Scheduled(fixedRate = SEND_RATE * 3)
     public void processPgePriceChanging() {
+        BigDecimal price = BigDecimal.valueOf(300.00);
         if (pgeCounter == PGE_TICK) {
             pgeDifference = getRandom();
-            pgePrice = pgePrice.add(pgeDifference);
-            if (pgePrice.compareTo(BigDecimal.ZERO) < 0) {
-                pgePrice = pgePrice.subtract(pgeDifference);
+            price = pgePrice.getValue().add(pgeDifference);
+            if (price.compareTo(BigDecimal.ZERO) < 0) {
+                price = price.subtract(pgeDifference);
             }
-            currentPrices.put(3L, pgePrice);
         }
 
         if (pgeCounter == PGE_TICK + 1) {
-            pgePrice = pgePrice.subtract(pgeDifference);
-            currentPrices.put(3L, pgePrice);
+            price = pgePrice.getValue().subtract(pgeDifference);
             pgeCounter = 0;
         }
+
+        pgePrice.setValue(price);
+        pgePrice.setUpdateTime(System.currentTimeMillis());
+        currentPrices.put(3L, pgePrice);
         pgeCounter++;
     }
 

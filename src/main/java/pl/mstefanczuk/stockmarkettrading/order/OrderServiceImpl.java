@@ -1,9 +1,11 @@
 package pl.mstefanczuk.stockmarkettrading.order;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import pl.mstefanczuk.stockmarkettrading.instrument.InstrumentService;
+import pl.mstefanczuk.stockmarkettrading.instrument.Price;
 import pl.mstefanczuk.stockmarkettrading.instrument.UserInstrument;
 import pl.mstefanczuk.stockmarkettrading.user.User;
 
@@ -14,6 +16,7 @@ import java.util.Collections;
 import java.util.Map;
 
 @Service
+@Slf4j
 public class OrderServiceImpl implements OrderService {
 
     public static final String STOCK_MARKET_SERVICE_URL = "http://stock-market-service:8080";
@@ -24,7 +27,8 @@ public class OrderServiceImpl implements OrderService {
     private final RestTemplate restTemplate;
     private final SimpMessagingTemplate template;
 
-    private Map<Long, BigDecimal> lastPrices;
+    private Map<Long, Price> lastPrices;
+    long startTime;
 
     public OrderServiceImpl(OrderRepository orderRepository,
                             OrderTypeRepository orderTypeRepository,
@@ -40,25 +44,26 @@ public class OrderServiceImpl implements OrderService {
     public void startListening(User user, Principal principal) {
         lastPrices = instrumentService.getCurrentPrices();
         while (true) {
-            Map<Long, BigDecimal> currentPrices = instrumentService.getCurrentPrices();
+            startTime = System.nanoTime();
+            Map<Long, Price> currentPrices = instrumentService.getCurrentPrices();
             currentPrices.forEach((k, v) -> handlePriceChange(k, v, user, principal));
         }
     }
 
-    private void handlePriceChange(Long id, BigDecimal price, User user, Principal principal) {
-        BigDecimal lastPrice = lastPrices.get(id);
+    private void handlePriceChange(Long id, Price price, User user, Principal principal) {
+        Price lastPrice = lastPrices.get(id);
         UserInstrument userInstrument = instrumentService.findUserInstrument(user.getId(), id);
         if (userInstrument == null) {
             return;
         }
-        if (BigDecimal.ZERO.compareTo(userInstrument.getAmount()) != 0 && price.compareTo(lastPrice) > 0) {
+        if (BigDecimal.ZERO.compareTo(userInstrument.getAmount()) != 0 && price.getValue().compareTo(lastPrice.getValue()) > 0) {
             Order sellOrder = sell(id, user, price, userInstrument);
             template.convertAndSendToUser(principal.getName(), "/queue/orders", sellOrder);
             template.convertAndSendToUser(principal.getName(),
                     "/queue/instruments", Collections.singletonList(userInstrument));
             lastPrices.put(id, price);
         }
-        if (price.compareTo(lastPrice) < 0) {
+        if (price.getValue().compareTo(lastPrice.getValue()) < 0) {
             Order purchaseOrder = purchase(id, user, price, userInstrument);
             template.convertAndSendToUser(principal.getName(), "/queue/orders", purchaseOrder);
             template.convertAndSendToUser(principal.getName(),
@@ -67,7 +72,7 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
-    private Order purchase(Long instrumentId, User user, BigDecimal price, UserInstrument userInstrument) {
+    private Order purchase(Long instrumentId, User user, Price price, UserInstrument userInstrument) {
         Order order = sendRequestToStockMarketService(instrumentId, user, price, Order.Type.BUY, userInstrument);
         userInstrument.setAmount(userInstrument.getAmount().add(userInstrument.getTradingAmount()));
         userInstrument.setBalance(userInstrument.getBalance().subtract(userInstrument.getTradingAmount().multiply(order.getStockServicePrice())));
@@ -75,7 +80,7 @@ public class OrderServiceImpl implements OrderService {
         return order;
     }
 
-    private Order sell(Long instrumentId, User user, BigDecimal price, UserInstrument userInstrument) {
+    private Order sell(Long instrumentId, User user, Price price, UserInstrument userInstrument) {
         Order order = sendRequestToStockMarketService(instrumentId, user, price, Order.Type.SELL, userInstrument);
         userInstrument.setAmount(userInstrument.getAmount().subtract(userInstrument.getTradingAmount()));
         userInstrument.setBalance(userInstrument.getBalance().add(userInstrument.getTradingAmount().multiply(order.getStockServicePrice())));
@@ -85,21 +90,29 @@ public class OrderServiceImpl implements OrderService {
 
     private Order sendRequestToStockMarketService(Long instrumentId,
                                                   User user,
-                                                  BigDecimal price,
+                                                  Price price,
                                                   Order.Type type,
                                                   UserInstrument userInstrument) {
         OrderDTO dto = new OrderDTO(instrumentId, user.getId(), type.id, userInstrument.getTradingAmount());
         LocalDateTime requestTime = LocalDateTime.now();
         OrderResultDTO resultDto = restTemplate.postForObject(STOCK_MARKET_SERVICE_URL + "/purchase", dto, OrderResultDTO.class);
+        logTime();
         Order order = new Order();
         order.setAmount(resultDto.getAmount());
         order.setInstrument(instrumentService.findById(instrumentId));
-        order.setLocalPrice(price);
+        order.setLocalPrice(price.getValue());
+        order.setLocalPriceUpdateTime(price.getUpdateTime());
         order.setStockServicePrice(resultDto.getPrice());
+        order.setStockServicePriceUpdateTime(resultDto.getPriceUpdateTime());
         order.setType(orderTypeRepository.findById(type.id).orElse(null));
         order.setUser(user);
         order.setRequestDateTime(requestTime);
         order.setResponseDateTime(resultDto.getDateTime());
         return orderRepository.save(order);
+    }
+
+    private void logTime() {
+        long endTime = System.nanoTime();
+        log.info("Total execution time: " + (endTime-startTime) + "ns");
     }
 }

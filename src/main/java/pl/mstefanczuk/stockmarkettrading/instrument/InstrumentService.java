@@ -1,13 +1,12 @@
 package pl.mstefanczuk.stockmarkettrading.instrument;
 
-import java.math.BigDecimal;
 import java.util.Map;
 
 public interface InstrumentService {
 
-    Map<Long, BigDecimal> getCurrentPrices();
+    Map<Long, Price> getCurrentPrices();
 
-    void setCurrentPrices(Map<Long, BigDecimal> prices);
+    void setCurrentPrices(Map<Long, Price> prices);
 
     Iterable<UserInstrument> saveAll(Iterable<UserInstrument> instruments);
 

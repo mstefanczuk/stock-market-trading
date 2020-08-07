@@ -36,22 +36,6 @@ public class WebSocketServerConfig implements WebSocketMessageBrokerConfigurer {
                             Map<String, Object> attributes) {
                         return new StompPrincipal(UUID.randomUUID().toString());
                     }
-//
-//                    public boolean beforeHandshake(
-//                            ServerHttpRequest request,
-//                            ServerHttpResponse response,
-//                            WebSocketHandler wsHandler,
-//                            Map<String, String> attributes) throws Exception {
-//
-//                        if (request instanceof ServletServerHttpRequest) {
-//                            ServletServerHttpRequest servletRequest
-//                                    = (ServletServerHttpRequest) request;
-//                            HttpSession session = servletRequest
-//                                    .getServletRequest().getSession();
-//                            attributes.put("sessionId", session.getId());
-//                        }
-//                        return true;
-//                    }
                 }).withSockJS();
     }
 

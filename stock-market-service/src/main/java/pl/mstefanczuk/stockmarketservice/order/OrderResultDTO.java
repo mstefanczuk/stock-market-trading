@@ -11,10 +11,11 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class OrderResultDTO {
-    Long instrumentId;
-    Long userId;
-    Integer typeId;
-    BigDecimal amount;
-    BigDecimal price;
-    LocalDateTime dateTime;
+    private Long instrumentId;
+    private Long userId;
+    private Integer typeId;
+    private BigDecimal amount;
+    private BigDecimal price;
+    private LocalDateTime priceUpdateTime;
+    private LocalDateTime dateTime;
 }

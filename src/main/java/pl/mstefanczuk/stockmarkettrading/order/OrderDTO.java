@@ -10,8 +10,8 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 public class OrderDTO {
-    Long instrumentId;
-    Long userId;
-    Integer typeId;
-    BigDecimal amount;
+    private Long instrumentId;
+    private Long userId;
+    private Integer typeId;
+    private BigDecimal amount;
 }
