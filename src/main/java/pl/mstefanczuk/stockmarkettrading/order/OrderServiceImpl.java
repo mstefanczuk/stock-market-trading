@@ -4,8 +4,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import pl.mstefanczuk.stockmarkettrading.instrument.InstrumentPrice;
 import pl.mstefanczuk.stockmarkettrading.instrument.InstrumentService;
-import pl.mstefanczuk.stockmarkettrading.instrument.Price;
 import pl.mstefanczuk.stockmarkettrading.instrument.UserInstrument;
 import pl.mstefanczuk.stockmarkettrading.user.User;
 
@@ -27,7 +27,7 @@ public class OrderServiceImpl implements OrderService {
     private final RestTemplate restTemplate;
     private final SimpMessagingTemplate template;
 
-    private Map<Long, Price> lastPrices;
+    private Map<Long, InstrumentPrice> lastPrices;
     long startTime;
 
     public OrderServiceImpl(OrderRepository orderRepository,
@@ -45,18 +45,18 @@ public class OrderServiceImpl implements OrderService {
         lastPrices = instrumentService.getCurrentPrices();
         while (true) {
             startTime = System.nanoTime();
-            Map<Long, Price> currentPrices = instrumentService.getCurrentPrices();
+            Map<Long, InstrumentPrice> currentPrices = instrumentService.getCurrentPrices();
             currentPrices.forEach((k, v) -> handlePriceChange(k, v, user, principal));
         }
     }
 
-    private void handlePriceChange(Long id, Price price, User user, Principal principal) {
-        Price lastPrice = lastPrices.get(id);
+    private void handlePriceChange(Long id, InstrumentPrice price, User user, Principal principal) {
+        InstrumentPrice lastPrice = lastPrices.get(id);
         UserInstrument userInstrument = instrumentService.findUserInstrument(user.getId(), id);
         if (userInstrument == null) {
             return;
         }
-        if (BigDecimal.ZERO.compareTo(userInstrument.getAmount()) != 0 && price.getValue().compareTo(lastPrice.getValue()) > 0) {
+        if (BigDecimal.ZERO.compareTo(userInstrument.getAmount()) != 0 && price.getPrice().compareTo(lastPrice.getPrice()) > 0) {
             Order sellOrder = sell(id, user, price, userInstrument);
             if (principal != null) {
                 template.convertAndSendToUser(principal.getName(), "/queue/orders", sellOrder);
@@ -66,7 +66,7 @@ public class OrderServiceImpl implements OrderService {
 
             lastPrices.put(id, price);
         }
-        if (price.getValue().compareTo(lastPrice.getValue()) < 0) {
+        if (price.getPrice().compareTo(lastPrice.getPrice()) < 0) {
             Order purchaseOrder = purchase(id, user, price, userInstrument);
             if (principal != null) {
                 template.convertAndSendToUser(principal.getName(), "/queue/orders", purchaseOrder);
@@ -77,25 +77,25 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
-    private Order purchase(Long instrumentId, User user, Price price, UserInstrument userInstrument) {
+    private Order purchase(Long instrumentId, User user, InstrumentPrice price, UserInstrument userInstrument) {
         Order order = sendRequestToStockMarketService(instrumentId, user, price, Order.Type.BUY, userInstrument);
         userInstrument.setAmount(userInstrument.getAmount().add(userInstrument.getTradingAmount()));
-        userInstrument.setBalance(userInstrument.getBalance().subtract(userInstrument.getTradingAmount().multiply(order.getStockServicePrice())));
+        userInstrument.setBalance(userInstrument.getBalance().subtract(userInstrument.getTradingAmount().multiply(order.getRealStockServicePrice())));
         instrumentService.save(userInstrument);
         return order;
     }
 
-    private Order sell(Long instrumentId, User user, Price price, UserInstrument userInstrument) {
+    private Order sell(Long instrumentId, User user, InstrumentPrice price, UserInstrument userInstrument) {
         Order order = sendRequestToStockMarketService(instrumentId, user, price, Order.Type.SELL, userInstrument);
         userInstrument.setAmount(userInstrument.getAmount().subtract(userInstrument.getTradingAmount()));
-        userInstrument.setBalance(userInstrument.getBalance().add(userInstrument.getTradingAmount().multiply(order.getStockServicePrice())));
+        userInstrument.setBalance(userInstrument.getBalance().add(userInstrument.getTradingAmount().multiply(order.getRealStockServicePrice())));
         instrumentService.save(userInstrument);
         return order;
     }
 
     private Order sendRequestToStockMarketService(Long instrumentId,
                                                   User user,
-                                                  Price price,
+                                                  InstrumentPrice price,
                                                   Order.Type type,
                                                   UserInstrument userInstrument) {
         OrderDTO dto = new OrderDTO(instrumentId, user.getId(), type.id, userInstrument.getTradingAmount());
@@ -105,10 +105,11 @@ public class OrderServiceImpl implements OrderService {
         Order order = new Order();
         order.setAmount(resultDto.getAmount());
         order.setInstrument(instrumentService.findById(instrumentId));
-        order.setLocalPrice(price.getValue());
-        order.setLocalPriceUpdateTime(price.getUpdateTime());
-        order.setStockServicePrice(resultDto.getPrice());
-        order.setStockServicePriceUpdateTime(resultDto.getPriceUpdateTime());
+        order.setLocalPrice(price.getPrice());
+        order.setLocalPriceUpdateTime(price.getLastUpdateTime());
+        order.setStockServicePriceUpdateTime(price.getStockServiceLastUpdateTime());
+        order.setRealStockServicePrice(resultDto.getPrice());
+        order.setRealStockServicePriceUpdateTime(resultDto.getPriceUpdateTime());
         order.setType(orderTypeRepository.findById(type.id).orElse(null));
         order.setUser(user);
         order.setRequestDateTime(requestTime);

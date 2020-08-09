@@ -7,7 +7,6 @@ import pl.mstefanczuk.stockmarkettrading.websocket.Message;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -26,23 +25,22 @@ public class InstrumentServiceImpl implements InstrumentService {
     private final SimpMessagingTemplate template;
 
     @Override
-    public Map<Long, Price> getCurrentPrices() {
+    public Map<Long, InstrumentPrice> getCurrentPrices() {
         return StreamSupport.stream(instrumentPriceRepository.findAll().spliterator(), false)
-                .map(p -> new AbstractMap.SimpleEntry<>(p.getId(), new Price(p.getPrice(), p.getLastUpdateTime())))
-                .collect(Collectors.toMap(AbstractMap.SimpleEntry::getKey, AbstractMap.SimpleEntry::getValue));
+                .collect(Collectors.toMap(InstrumentPrice::getId, i -> i));
     }
 
     @Override
     public void setCurrentPrices(Map<Long, Price> prices) {
         AtomicBoolean isChange = new AtomicBoolean(false);
-        Map<Long, Price> currentPrices = getCurrentPrices();
+        Map<Long, InstrumentPrice> currentPrices = getCurrentPrices();
         List<InstrumentPrice> instrumentPriceList = new ArrayList<>();
         prices.forEach((k, v) -> {
             Price price = new Price(v.getValue(), LocalDateTime.now());
             InstrumentPrice instrumentPrice =
                     createInstrumentPrice(instrumentRepository.findById(k).orElse(null), price, v.getUpdateTime());
             instrumentPriceList.add(instrumentPrice);
-            if (currentPrices.get(k) == null || v.getValue().compareTo(currentPrices.get(k).getValue()) != 0) {
+            if (currentPrices.get(k) == null || v.getValue().compareTo(currentPrices.get(k).getPrice()) != 0) {
                 instrumentPriceRepository.save(instrumentPrice);
                 instrumentPriceHistoryRepository.save(createInstrumentPriceHistory(instrumentPrice));
                 isChange.set(true);

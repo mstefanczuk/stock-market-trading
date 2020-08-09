@@ -65,17 +65,18 @@ CREATE INDEX order_type_id_idx ON order_type (id);
 DROP TABLE IF EXISTS "order" CASCADE;
 CREATE TABLE "order"
 (
-    id                              serial  NOT NULL,
-    user_id                         integer NOT NULL REFERENCES "user",
-    instrument_id                   integer NOT NULL REFERENCES instrument,
-    amount                          numeric NOT NULL,
-    type_id                         integer NOT NULL REFERENCES order_type,
-    local_price                     numeric NOT NULL,
-    local_price_update_time         timestamp without time zone,
-    stock_service_price             numeric NOT NULL,
-    stock_service_price_update_time timestamp without time zone,
-    request_date_time               timestamp without time zone,
-    response_date_time              timestamp without time zone,
+    id                                   serial  NOT NULL,
+    user_id                              integer NOT NULL REFERENCES "user",
+    instrument_id                        integer NOT NULL REFERENCES instrument,
+    amount                               numeric NOT NULL,
+    type_id                              integer NOT NULL REFERENCES order_type,
+    local_price                          numeric NOT NULL,
+    local_price_update_time              numeric,
+    stock_service_price_update_time      numeric,
+    real_stock_service_price             numeric NOT NULL,
+    real_stock_service_price_update_time numeric,
+    request_date_time                    timestamp without time zone,
+    response_date_time                   timestamp without time zone,
     CONSTRAINT order_pkey PRIMARY KEY (id)
 );
 DROP INDEX IF EXISTS order_id_idx CASCADE;

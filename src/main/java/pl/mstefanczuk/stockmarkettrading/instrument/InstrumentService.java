@@ -4,7 +4,7 @@ import java.util.Map;
 
 public interface InstrumentService {
 
-    Map<Long, Price> getCurrentPrices();
+    Map<Long, InstrumentPrice> getCurrentPrices();
 
     void setCurrentPrices(Map<Long, Price> prices);
 

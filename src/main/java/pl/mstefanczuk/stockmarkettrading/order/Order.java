@@ -28,8 +28,9 @@ public class Order {
     private OrderType type;
     private BigDecimal localPrice;
     private LocalDateTime localPriceUpdateTime;
-    private BigDecimal stockServicePrice;
     private LocalDateTime stockServicePriceUpdateTime;
+    private BigDecimal realStockServicePrice;
+    private LocalDateTime realStockServicePriceUpdateTime;
     private LocalDateTime requestDateTime;
     private LocalDateTime responseDateTime;
 

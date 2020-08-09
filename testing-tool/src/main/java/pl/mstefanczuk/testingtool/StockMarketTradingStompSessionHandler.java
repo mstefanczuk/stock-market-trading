@@ -27,12 +27,12 @@ public class StockMarketTradingStompSessionHandler extends StompSessionHandlerAd
         List<UserInstrument> userInstruments;
         User user = new User();
 
-        for(int i = 1; i <= 1000; i++) {
+        for(int i = 1; i <= 100; i++) {
 
             user.setId((long) i);
             user.setLogin("user" + i);
             session.send("/users/save", "user" + i);
-            Thread.sleep(60);
+            Thread.sleep(1000);
 
             userInstruments = new ArrayList<>();
             userInstruments.add(createUserInstrument(user, cdpInstrument, BigDecimal.valueOf(100)));
@@ -40,6 +40,10 @@ public class StockMarketTradingStompSessionHandler extends StompSessionHandlerAd
             userInstruments.add(createUserInstrument(user, pgeInstrument, BigDecimal.valueOf(300)));
 
             session.send("/instrument/save", userInstruments);
+            if (i % 10 == 0) {
+                log.info("Saved users: " + i);
+            }
+
         }
     }
 
