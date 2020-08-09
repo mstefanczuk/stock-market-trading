@@ -27,6 +27,9 @@ public class WebSocketServerConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry
                 .addEndpoint("/greeting")
+                .setAllowedOrigins("*");
+        registry
+                .addEndpoint("/greeting")
                 .setHandshakeHandler(new DefaultHandshakeHandler() {
 
                     @Override
@@ -36,7 +39,7 @@ public class WebSocketServerConfig implements WebSocketMessageBrokerConfigurer {
                             Map<String, Object> attributes) {
                         return new StompPrincipal(UUID.randomUUID().toString());
                     }
-                }).withSockJS();
+                }).setAllowedOrigins("*").withSockJS();
     }
 
     @AllArgsConstructor

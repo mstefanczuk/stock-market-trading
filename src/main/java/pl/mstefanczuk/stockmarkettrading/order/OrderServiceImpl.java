@@ -58,16 +58,21 @@ public class OrderServiceImpl implements OrderService {
         }
         if (BigDecimal.ZERO.compareTo(userInstrument.getAmount()) != 0 && price.getValue().compareTo(lastPrice.getValue()) > 0) {
             Order sellOrder = sell(id, user, price, userInstrument);
-            template.convertAndSendToUser(principal.getName(), "/queue/orders", sellOrder);
-            template.convertAndSendToUser(principal.getName(),
-                    "/queue/instruments", Collections.singletonList(userInstrument));
+            if (principal != null) {
+                template.convertAndSendToUser(principal.getName(), "/queue/orders", sellOrder);
+                template.convertAndSendToUser(principal.getName(),
+                        "/queue/instruments", Collections.singletonList(userInstrument));
+            }
+
             lastPrices.put(id, price);
         }
         if (price.getValue().compareTo(lastPrice.getValue()) < 0) {
             Order purchaseOrder = purchase(id, user, price, userInstrument);
-            template.convertAndSendToUser(principal.getName(), "/queue/orders", purchaseOrder);
-            template.convertAndSendToUser(principal.getName(),
-                    "/queue/instruments", Collections.singletonList(userInstrument));
+            if (principal != null) {
+                template.convertAndSendToUser(principal.getName(), "/queue/orders", purchaseOrder);
+                template.convertAndSendToUser(principal.getName(),
+                        "/queue/instruments", Collections.singletonList(userInstrument));
+            }
             lastPrices.put(id, price);
         }
     }

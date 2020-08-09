@@ -14,10 +14,10 @@ import java.util.Random;
 @Slf4j
 public class InstrumentPriceServiceImpl implements InstrumentPriceService {
 
-    public static final int CDP_TICK = 400;
-    public static final int TESLA_TICK = 600;
-    public static final int PGE_TICK = 700;
-    public static final int SEND_RATE = 10;
+    public static final int CDP_TICK = 40;
+    public static final int TESLA_TICK = 60;
+    public static final int PGE_TICK = 80;
+    public static final int SEND_RATE = 100;
 
     private final SimpMessagingTemplate template;
 
