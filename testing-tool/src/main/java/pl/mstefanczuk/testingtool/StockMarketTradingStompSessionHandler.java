@@ -27,6 +27,8 @@ public class StockMarketTradingStompSessionHandler extends StompSessionHandlerAd
         List<UserInstrument> userInstruments;
         User user = new User();
 
+        log.info("Saved users: " + 0);
+
         for(int i = 1; i <= 100; i++) {
 
             user.setId((long) i);
