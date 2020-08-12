@@ -2,6 +2,7 @@ package pl.mstefanczuk.stockmarkettrading.user;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import pl.mstefanczuk.stockmarkettrading.user.repository.UserInMemoryRepository;
 
 import java.util.Optional;
 
@@ -9,7 +10,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
-    private final UserRepository userRepository;
+    private final UserInMemoryRepository userRepository;
 
     @Override
     public User save(String login) {

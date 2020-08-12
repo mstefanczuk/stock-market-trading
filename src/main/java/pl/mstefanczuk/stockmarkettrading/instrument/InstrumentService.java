@@ -1,5 +1,6 @@
 package pl.mstefanczuk.stockmarkettrading.instrument;
 
+import java.util.List;
 import java.util.Map;
 
 public interface InstrumentService {
@@ -8,7 +9,7 @@ public interface InstrumentService {
 
     void setCurrentPrices(Map<Long, Price> prices);
 
-    Iterable<UserInstrument> saveAll(Iterable<UserInstrument> instruments);
+    List<UserInstrument> saveAll(Iterable<UserInstrument> instruments);
 
     UserInstrument save(UserInstrument userInstrument);
 

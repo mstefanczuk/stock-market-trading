@@ -3,31 +3,32 @@ package pl.mstefanczuk.stockmarkettrading.instrument;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
+import pl.mstefanczuk.stockmarkettrading.instrument.repository.InstrumentInMemoryRepository;
+import pl.mstefanczuk.stockmarkettrading.instrument.repository.InstrumentPriceHistoryInMemoryRepository;
+import pl.mstefanczuk.stockmarkettrading.instrument.repository.InstrumentPriceInMemoryRepository;
+import pl.mstefanczuk.stockmarkettrading.instrument.repository.UserInstrumentInMemoryRepository;
 import pl.mstefanczuk.stockmarkettrading.websocket.Message;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 @Service
 @RequiredArgsConstructor
 public class InstrumentServiceImpl implements InstrumentService {
 
-    private final InstrumentRepository instrumentRepository;
-    private final UserInstrumentRepository userInstrumentRepository;
-    private final InstrumentPriceRepository instrumentPriceRepository;
-    private final InstrumentPriceHistoryRepository instrumentPriceHistoryRepository;
+    private final InstrumentInMemoryRepository instrumentRepository;
+    private final UserInstrumentInMemoryRepository userInstrumentRepository;
+    private final InstrumentPriceInMemoryRepository instrumentPriceRepository;
+    private final InstrumentPriceHistoryInMemoryRepository instrumentPriceHistoryRepository;
     private final SimpMessagingTemplate template;
 
     @Override
     public Map<Long, InstrumentPrice> getCurrentPrices() {
-        return StreamSupport.stream(instrumentPriceRepository.findAll().spliterator(), false)
-                .collect(Collectors.toMap(InstrumentPrice::getId, i -> i));
+        return instrumentPriceRepository.findAll();
     }
 
     @Override
@@ -52,18 +53,12 @@ public class InstrumentServiceImpl implements InstrumentService {
     }
 
     @Override
-    public Iterable<UserInstrument> saveAll(Iterable<UserInstrument> instruments) {
-        instruments.forEach(i -> {
-            setUserInstrumentNullValues(i);
-            userInstrumentRepository.findByUserIdAndInstrumentId(i.getUser().getId(), i.getInstrument().getId())
-                    .ifPresent(instrument -> i.setId(instrument.getId()));
-        });
+    public List<UserInstrument> saveAll(Iterable<UserInstrument> instruments) {
         return userInstrumentRepository.saveAll(instruments);
     }
 
     @Override
     public UserInstrument save(UserInstrument userInstrument) {
-        setUserInstrumentNullValues(userInstrument);
         return userInstrumentRepository.save(userInstrument);
     }
 
@@ -104,17 +99,5 @@ public class InstrumentServiceImpl implements InstrumentService {
                                 .collect(Collectors.joining(", ")))
                         .time(LocalDateTime.now().toString())
                         .build());
-    }
-
-    private void setUserInstrumentNullValues(UserInstrument instrument) {
-        if (instrument.getAmount() == null) {
-            instrument.setAmount(BigDecimal.valueOf(1000.00));
-        }
-        if (instrument.getTradingAmount() == null) {
-            instrument.setTradingAmount(BigDecimal.ZERO);
-        }
-        if (instrument.getBalance() == null) {
-            instrument.setBalance(BigDecimal.ZERO);
-        }
     }
 }

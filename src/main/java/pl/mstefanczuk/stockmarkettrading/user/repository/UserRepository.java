@@ -1,6 +1,7 @@
-package pl.mstefanczuk.stockmarkettrading.user;
+package pl.mstefanczuk.stockmarkettrading.user.repository;
 
 import org.springframework.data.repository.CrudRepository;
+import pl.mstefanczuk.stockmarkettrading.user.User;
 
 import java.util.Optional;
 
