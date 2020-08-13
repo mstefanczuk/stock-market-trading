@@ -20,7 +20,7 @@ public class InstrumentController {
     @SendToUser("/queue/instruments")
     public List<UserInstrument> save(final List<UserInstrument> instruments, Principal principal) {
         List<UserInstrument> savedInstruments = instrumentService.saveAll(instruments);
-        new Thread(() -> orderService.startListening(savedInstruments.get(0).getUser(), principal)).start();
+        orderService.startListening(savedInstruments.get(0).getUser(), principal);
         return savedInstruments;
     }
 }

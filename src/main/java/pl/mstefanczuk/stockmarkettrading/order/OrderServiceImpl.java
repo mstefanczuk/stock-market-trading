@@ -2,6 +2,7 @@ package pl.mstefanczuk.stockmarkettrading.order;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import pl.mstefanczuk.stockmarkettrading.instrument.InstrumentPrice;
@@ -40,6 +41,7 @@ public class OrderServiceImpl implements OrderService {
         this.restTemplate = new RestTemplate();
     }
 
+    @Async
     public void startListening(User user, Principal principal) {
         lastPrices = new HashMap<>();
         Map<Long, InstrumentPrice> currentPrices = instrumentService.getCurrentPrices();
