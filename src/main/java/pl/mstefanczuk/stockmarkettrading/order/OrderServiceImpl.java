@@ -8,7 +8,6 @@ import pl.mstefanczuk.stockmarkettrading.instrument.InstrumentPrice;
 import pl.mstefanczuk.stockmarkettrading.instrument.InstrumentService;
 import pl.mstefanczuk.stockmarkettrading.instrument.UserInstrument;
 import pl.mstefanczuk.stockmarkettrading.order.repository.OrderInMemoryRepository;
-import pl.mstefanczuk.stockmarkettrading.order.repository.OrderTypeRepository;
 import pl.mstefanczuk.stockmarkettrading.user.User;
 
 import java.math.BigDecimal;
@@ -33,7 +32,6 @@ public class OrderServiceImpl implements OrderService {
     long startTime;
 
     public OrderServiceImpl(OrderInMemoryRepository orderRepository,
-                            OrderTypeRepository orderTypeRepository,
                             InstrumentService instrumentService,
                             SimpMessagingTemplate template) {
         this.orderRepository = orderRepository;
