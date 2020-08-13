@@ -23,7 +23,7 @@ public class InstrumentController {
     public List<UserInstrument> save(final List<UserInstrument> instruments, Principal principal) {
         List<UserInstrument> savedInstruments = StreamSupport.stream(instrumentService.saveAll(instruments).spliterator(), false)
                 .collect(Collectors.toList());
-        new Thread(() -> orderService.startListening(savedInstruments.get(0).getUser(), principal)).start();
+        orderService.startListening(savedInstruments.get(0).getUser(), principal);
         return savedInstruments;
     }
 }

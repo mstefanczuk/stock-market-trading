@@ -47,12 +47,6 @@ public class InstrumentPriceServiceImpl implements InstrumentPriceService {
         return currentPrices.get(id);
     }
 
-    @Override
-    @Scheduled(fixedRate = SEND_RATE)
-    public void broadcastCurrentPrices() {
-        template.convertAndSend("/topic/current-prices", currentPrices);
-    }
-
     @Scheduled(fixedRate = SEND_RATE)
     public void processCdpPriceChanging() {
         BigDecimal price;
@@ -65,6 +59,7 @@ public class InstrumentPriceServiceImpl implements InstrumentPriceService {
             cdpPrice.setValue(price);
             cdpPrice.setUpdateTime(System.currentTimeMillis());
             currentPrices.put(1L, cdpPrice);
+            broadcastCurrentPrices();
         }
 
         if (cdpCounter == CDP_TICK + 1) {
@@ -72,6 +67,7 @@ public class InstrumentPriceServiceImpl implements InstrumentPriceService {
             cdpPrice.setValue(price);
             cdpPrice.setUpdateTime(System.currentTimeMillis());
             currentPrices.put(1L, cdpPrice);
+            broadcastCurrentPrices();
             cdpCounter = 0;
         }
 
@@ -86,10 +82,11 @@ public class InstrumentPriceServiceImpl implements InstrumentPriceService {
             price = teslaPrice.getValue().add(teslaDifference);
             if (price.compareTo(BigDecimal.ZERO) < 0) {
                 price = price.subtract(teslaDifference);
-                teslaPrice.setValue(price);
-                teslaPrice.setUpdateTime(System.currentTimeMillis());
-                currentPrices.put(2L, teslaPrice);
             }
+            teslaPrice.setValue(price);
+            teslaPrice.setUpdateTime(System.currentTimeMillis());
+            currentPrices.put(2L, teslaPrice);
+            broadcastCurrentPrices();
         }
 
         if (teslaCounter == TESLA_TICK + 1) {
@@ -97,6 +94,7 @@ public class InstrumentPriceServiceImpl implements InstrumentPriceService {
             teslaPrice.setValue(price);
             teslaPrice.setUpdateTime(System.currentTimeMillis());
             currentPrices.put(2L, teslaPrice);
+            broadcastCurrentPrices();
             teslaCounter = 0;
         }
         teslaCounter++;
@@ -104,16 +102,17 @@ public class InstrumentPriceServiceImpl implements InstrumentPriceService {
 
     @Scheduled(fixedRate = SEND_RATE * 3)
     public void processPgePriceChanging() {
-        BigDecimal price = BigDecimal.valueOf(300.00);
+        BigDecimal price;
         if (pgeCounter == PGE_TICK) {
             pgeDifference = getRandom();
             price = pgePrice.getValue().add(pgeDifference);
             if (price.compareTo(BigDecimal.ZERO) < 0) {
                 price = price.subtract(pgeDifference);
-                pgePrice.setValue(price);
-                pgePrice.setUpdateTime(System.currentTimeMillis());
-                currentPrices.put(3L, pgePrice);
             }
+            pgePrice.setValue(price);
+            pgePrice.setUpdateTime(System.currentTimeMillis());
+            currentPrices.put(3L, pgePrice);
+            broadcastCurrentPrices();
         }
 
         if (pgeCounter == PGE_TICK + 1) {
@@ -121,10 +120,15 @@ public class InstrumentPriceServiceImpl implements InstrumentPriceService {
             pgePrice.setValue(price);
             pgePrice.setUpdateTime(System.currentTimeMillis());
             currentPrices.put(3L, pgePrice);
+            broadcastCurrentPrices();
             pgeCounter = 0;
         }
 
         pgeCounter++;
+    }
+
+    private void broadcastCurrentPrices() {
+        template.convertAndSend("/topic/current-prices", currentPrices);
     }
 
     private BigDecimal getRandom() {
