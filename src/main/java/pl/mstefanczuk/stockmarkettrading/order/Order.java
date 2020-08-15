@@ -1,32 +1,23 @@
 package pl.mstefanczuk.stockmarkettrading.order;
 
 import lombok.Data;
-import pl.mstefanczuk.stockmarkettrading.instrument.Instrument;
-import pl.mstefanczuk.stockmarkettrading.user.User;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Table;
 
-import javax.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "`order`")
+
+@Table(value = "\"order\"")
 @Data
 public class Order {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "order_generator")
-    @SequenceGenerator(name="order_generator", sequenceName = "order_seq", allocationSize = 1)
     private Long id;
-    @ManyToOne
-    @JoinColumn(name="user_id", nullable=false)
-    private User user;
-    @ManyToOne
-    @JoinColumn(name="instrument_id", nullable=false)
-    private Instrument instrument;
+    private Long userId;
+    private Long instrumentId;
     private BigDecimal amount;
-    @ManyToOne
-    @JoinColumn(name="type_id", nullable=false)
-    private OrderType type;
+    private Integer typeId;
     private BigDecimal localPrice;
     private LocalDateTime localPriceUpdateTime;
     private LocalDateTime stockServicePriceUpdateTime;

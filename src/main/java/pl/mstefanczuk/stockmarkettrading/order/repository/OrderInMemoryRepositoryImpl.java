@@ -34,12 +34,10 @@ public class OrderInMemoryRepositoryImpl implements OrderInMemoryRepository {
 
     @Override
     public Order save(Order order) {
-        if (order.getId() == null) {
-            order.setId((long) orders.size() + 1);
-        }
-        orders.add(order);
-        new Thread(() -> orderDbRepository.save(order)).start();
-        log.info("orders size: " + orders.size());
+        orderDbRepository.save(order).subscribe(o -> {
+            orders.add(order);
+            log.info("saved. orders size: " + orders.size());
+        });
         return order;
     }
 }

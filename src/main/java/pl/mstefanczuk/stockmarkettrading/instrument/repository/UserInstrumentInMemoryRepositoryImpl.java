@@ -1,6 +1,7 @@
 package pl.mstefanczuk.stockmarkettrading.instrument.repository;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 import pl.mstefanczuk.stockmarkettrading.instrument.UserInstrument;
 
@@ -8,6 +9,7 @@ import java.math.BigDecimal;
 import java.util.*;
 
 @Repository
+@Slf4j
 public class UserInstrumentInMemoryRepositoryImpl implements UserInstrumentInMemoryRepository {
 
     private final Map<UserInstrumentKey, UserInstrument> userInstruments = new HashMap<>();
@@ -33,6 +35,7 @@ public class UserInstrumentInMemoryRepositoryImpl implements UserInstrumentInMem
             savedInstruments.add(i);
             userInstruments.put(new UserInstrumentKey(i.getInstrument().getId(), i.getUser().getId()), i);
         });
+        log.info("instruments saved");
         return savedInstruments;
     }
 

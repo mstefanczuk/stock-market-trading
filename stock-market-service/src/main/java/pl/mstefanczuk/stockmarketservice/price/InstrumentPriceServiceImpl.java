@@ -1,9 +1,11 @@
 package pl.mstefanczuk.stockmarketservice.price;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.DirectProcessor;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.FluxSink;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
@@ -19,8 +21,6 @@ public class InstrumentPriceServiceImpl implements InstrumentPriceService {
     public static final int PGE_TICK = 80;
     public static final int SEND_RATE = 100;
 
-    private final SimpMessagingTemplate template;
-
     private final Map<Long, Price> currentPrices = new HashMap<>();
 
     private final Price cdpPrice = new Price(BigDecimal.valueOf(100.00), System.currentTimeMillis());
@@ -35,11 +35,16 @@ public class InstrumentPriceServiceImpl implements InstrumentPriceService {
     private BigDecimal teslaDifference = BigDecimal.ZERO;
     private BigDecimal pgeDifference = BigDecimal.ZERO;
 
-    public InstrumentPriceServiceImpl(SimpMessagingTemplate template) {
-        this.template = template;
+    private final DirectProcessor<Map<Long, Price>> processor;
+    private final FluxSink<Map<Long, Price>> sink;
+
+    public InstrumentPriceServiceImpl() {
         currentPrices.put(1L, cdpPrice);
         currentPrices.put(2L, teslaPrice);
         currentPrices.put(3L, pgePrice);
+
+        this.processor = DirectProcessor.create();
+        this.sink = processor.sink();
     }
 
     @Override
@@ -59,7 +64,7 @@ public class InstrumentPriceServiceImpl implements InstrumentPriceService {
             cdpPrice.setValue(price);
             cdpPrice.setUpdateTime(System.currentTimeMillis());
             currentPrices.put(1L, cdpPrice);
-            broadcastCurrentPrices();
+            emitNewPrices();
         }
 
         if (cdpCounter == CDP_TICK + 1) {
@@ -67,7 +72,7 @@ public class InstrumentPriceServiceImpl implements InstrumentPriceService {
             cdpPrice.setValue(price);
             cdpPrice.setUpdateTime(System.currentTimeMillis());
             currentPrices.put(1L, cdpPrice);
-            broadcastCurrentPrices();
+            emitNewPrices();
             cdpCounter = 0;
         }
 
@@ -86,7 +91,7 @@ public class InstrumentPriceServiceImpl implements InstrumentPriceService {
             teslaPrice.setValue(price);
             teslaPrice.setUpdateTime(System.currentTimeMillis());
             currentPrices.put(2L, teslaPrice);
-            broadcastCurrentPrices();
+            emitNewPrices();
         }
 
         if (teslaCounter == TESLA_TICK + 1) {
@@ -94,7 +99,7 @@ public class InstrumentPriceServiceImpl implements InstrumentPriceService {
             teslaPrice.setValue(price);
             teslaPrice.setUpdateTime(System.currentTimeMillis());
             currentPrices.put(2L, teslaPrice);
-            broadcastCurrentPrices();
+            emitNewPrices();
             teslaCounter = 0;
         }
         teslaCounter++;
@@ -112,7 +117,7 @@ public class InstrumentPriceServiceImpl implements InstrumentPriceService {
             pgePrice.setValue(price);
             pgePrice.setUpdateTime(System.currentTimeMillis());
             currentPrices.put(3L, pgePrice);
-            broadcastCurrentPrices();
+            emitNewPrices();
         }
 
         if (pgeCounter == PGE_TICK + 1) {
@@ -120,15 +125,23 @@ public class InstrumentPriceServiceImpl implements InstrumentPriceService {
             pgePrice.setValue(price);
             pgePrice.setUpdateTime(System.currentTimeMillis());
             currentPrices.put(3L, pgePrice);
-            broadcastCurrentPrices();
+            emitNewPrices();
             pgeCounter = 0;
         }
 
         pgeCounter++;
     }
 
-    private void broadcastCurrentPrices() {
-        template.convertAndSend("/topic/current-prices", currentPrices);
+    @Override
+    public Flux<Map<Long, Price>> getCurrentPrices() {
+        return Flux.concat(
+                Flux.just(currentPrices),
+                processor.map(map -> map)
+        );
+    }
+
+    private void emitNewPrices() {
+        sink.next(currentPrices);
     }
 
     private BigDecimal getRandom() {

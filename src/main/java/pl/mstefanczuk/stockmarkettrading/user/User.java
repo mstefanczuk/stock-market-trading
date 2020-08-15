@@ -1,16 +1,14 @@
 package pl.mstefanczuk.stockmarkettrading.user;
 
 import lombok.Data;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Table;
 
-import javax.persistence.*;
-
-@Entity
-@Table(name = "`user`")
+@Table(value = "\"user\"")
 @Data
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String login;
 }

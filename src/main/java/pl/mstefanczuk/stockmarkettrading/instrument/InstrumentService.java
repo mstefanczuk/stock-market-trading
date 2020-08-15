@@ -1,11 +1,14 @@
 package pl.mstefanczuk.stockmarkettrading.instrument;
 
+import org.springframework.data.util.Pair;
+import reactor.core.publisher.Flux;
+
 import java.util.List;
 import java.util.Map;
 
 public interface InstrumentService {
 
-    Map<Long, InstrumentPrice> getCurrentPrices();
+    Flux<Pair<Map<Long, InstrumentPrice>, Map<Long, InstrumentPrice>>> getPrices();
 
     void setCurrentPrices(Map<Long, Price> prices);
 

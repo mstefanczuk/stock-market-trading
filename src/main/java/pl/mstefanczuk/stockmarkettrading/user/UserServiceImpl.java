@@ -2,27 +2,19 @@ package pl.mstefanczuk.stockmarkettrading.user;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import pl.mstefanczuk.stockmarkettrading.user.repository.UserInMemoryRepository;
-
-import java.util.Optional;
+import pl.mstefanczuk.stockmarkettrading.user.repository.UserRepository;
+import reactor.core.publisher.Mono;
 
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
-    private final UserInMemoryRepository userRepository;
+    private final UserRepository userRepository;
 
     @Override
-    public User save(String login) {
-        User user;
-        Optional<User> userOptional = userRepository.findByLogin(login);
-        if (userOptional.isPresent()) {
-            user = userOptional.get();
-        } else {
-            user = new User();
-            user.setLogin(login);
-            userRepository.save(user);
-        }
-        return user;
+    public Mono<User> save(String login) {
+        User user = new User();
+        user.setLogin(login);
+        return userRepository.save(user);
     }
 }

@@ -1,6 +1,8 @@
 package pl.mstefanczuk.stockmarkettrading.user;
 
+import reactor.core.publisher.Mono;
+
 public interface UserService {
 
-    User save(String login);
+    Mono<User> save(String login);
 }

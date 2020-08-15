@@ -2,20 +2,20 @@ package pl.mstefanczuk.stockmarkettrading.user;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.simp.annotation.SendToUser;
-import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Mono;
 
-@Controller
+@RestController
 @RequiredArgsConstructor
 @Slf4j
 public class UserController {
 
     private final UserService userService;
 
-    @MessageMapping("/users/save")
-    @SendToUser("/queue/login")
-    public User login(final String login) {
+    @PostMapping("/users/save")
+    public Mono<User> login(@RequestBody String login) {
         return userService.save(login);
     }
 }

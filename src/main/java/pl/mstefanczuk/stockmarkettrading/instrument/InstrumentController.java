@@ -1,26 +1,26 @@
 package pl.mstefanczuk.stockmarkettrading.instrument;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.simp.annotation.SendToUser;
-import org.springframework.stereotype.Controller;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
 import pl.mstefanczuk.stockmarkettrading.order.OrderService;
+import reactor.core.publisher.Flux;
 
-import java.security.Principal;
 import java.util.List;
 
-@Controller
+@RestController
 @RequiredArgsConstructor
 public class InstrumentController {
 
     private final InstrumentService instrumentService;
     private final OrderService orderService;
 
-    @MessageMapping("/instrument/save")
-    @SendToUser("/queue/instruments")
-    public List<UserInstrument> save(final List<UserInstrument> instruments, Principal principal) {
+    @PostMapping(path = "/instrument/save", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<List<UserInstrument>> save(@RequestBody List<UserInstrument> instruments) {
         List<UserInstrument> savedInstruments = instrumentService.saveAll(instruments);
-        new Thread(() -> orderService.startListening(savedInstruments.get(0).getUser(), principal)).start();
-        return savedInstruments;
+        orderService.subscribe(savedInstruments.get(0).getUser());
+        return Flux.just(instruments);
     }
 }
